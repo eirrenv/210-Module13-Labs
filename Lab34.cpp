@@ -3,7 +3,7 @@
 #include <queue>
 using namespace std;
 
-const int SIZE = 7;
+const int SIZE = 13;  // Increased size (0–12)
 
 struct Edge {
     int src, dest, weight;
@@ -80,10 +80,15 @@ public:
 };
 
 int main() {
+    // Updated edges:
+    // - Removed nodes 1 and 3
+    // - Added nodes 7–12
+    // - Changed weights
     vector<Edge> edges = {
-        {0,1,12},{0,2,8},{0,3,21},
-        {2,3,6},{2,6,2},{5,6,6},
-        {4,5,9},{2,4,4},{2,5,5}
+        {0,2,15},{2,6,3},{2,4,7},{2,5,9},
+        {6,7,4},{7,8,6},{8,9,2},
+        {9,10,5},{10,11,8},{11,12,1},
+        {4,12,10},{5,8,11},{0,7,13}
     };
 
     Graph graph(edges);
