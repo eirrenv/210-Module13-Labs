@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <limits>
 using namespace std;
 
 const int SIZE = 13;
@@ -15,7 +16,6 @@ class Graph {
 public:
     vector<vector<Pair>> adjList;
 
-    // Labels for real-world meaning
     vector<string> labels = {
         "Main Server", "REMOVED", "Core Router", "REMOVED",
         "Data Center A", "Data Center B", "Firewall",
@@ -115,6 +115,43 @@ public:
             }
         }
     }
+
+    // -------- Dijkstra (Shortest Path) --------
+    void shortestPath(int start) {
+        vector<int> dist(SIZE, numeric_limits<int>::max());
+
+        priority_queue<Pair, vector<Pair>, greater<Pair>> pq;
+
+        dist[start] = 0;
+        pq.push(make_pair(0, start));
+
+        while (!pq.empty()) {
+            int current = pq.top().second;
+            int currentDist = pq.top().first;
+            pq.pop();
+
+            for (Pair neighbor : adjList[current]) {
+                int next = neighbor.first;
+                int weight = neighbor.second;
+
+                if (dist[current] + weight < dist[next]) {
+                    dist[next] = dist[current] + weight;
+                    pq.push(make_pair(dist[next], next));
+                }
+            }
+        }
+
+        cout << "\nShortest path from node " << start << ":\n";
+
+        for (int i = 0; i < SIZE; i++) {
+            if (labels[i] == "REMOVED") continue;
+
+            if (dist[i] == numeric_limits<int>::max())
+                cout << start << " -> " << i << " : INF\n";
+            else
+                cout << start << " -> " << i << " : " << dist[i] << endl;
+        }
+    }
 };
 
 int main() {
@@ -131,6 +168,8 @@ int main() {
 
     graph.DFS(0);
     graph.BFS(0);
+
+    graph.shortestPath(0);
 
     return 0;
 }
