@@ -3,7 +3,7 @@
 #include <queue>
 using namespace std;
 
-const int SIZE = 13;  // Increased size (0–12)
+const int SIZE = 13;
 
 struct Edge {
     int src, dest, weight;
@@ -15,44 +15,71 @@ class Graph {
 public:
     vector<vector<Pair>> adjList;
 
+    // Labels for real-world meaning
+    vector<string> labels = {
+        "Main Server", "REMOVED", "Core Router", "REMOVED",
+        "Data Center A", "Data Center B", "Firewall",
+        "Edge Router 1", "Edge Router 2", "Client Node A",
+        "Client Node B", "Backup Server", "Cloud Gateway"
+    };
+
     Graph(vector<Edge> const &edges) {
         adjList.resize(SIZE);
 
         for (auto &edge: edges) {
-            int src = edge.src;
-            int dest = edge.dest;
-            int weight = edge.weight;
-
-            adjList[src].push_back(make_pair(dest, weight));
-            adjList[dest].push_back(make_pair(src, weight));
+            adjList[edge.src].push_back(make_pair(edge.dest, edge.weight));
+            adjList[edge.dest].push_back(make_pair(edge.src, edge.weight));
         }
     }
 
+    // -------- Pretty Print --------
     void printGraph() {
-        cout << "Graph's adjacency list:" << endl;
+        cout << "Computer Network Topology:\n";
+        cout << "================================\n";
+
         for (int i = 0; i < adjList.size(); i++) {
-            cout << i << " --> ";
-            for (Pair v : adjList[i])
-                cout << "(" << v.first << ", " << v.second << ") ";
-            cout << endl;
+            if (labels[i] == "REMOVED") continue;
+
+            cout << "Node " << i << " (" << labels[i] << ") connects to:\n";
+
+            for (Pair v : adjList[i]) {
+                if (labels[v.first] == "REMOVED") continue;
+
+                cout << "  -> Node " << v.first
+                     << " (" << labels[v.first] << ")"
+                     << " [Latency: " << v.second << " ms]\n";
+            }
         }
     }
 
     // -------- DFS --------
     void DFSUtil(int v, vector<bool> &visited) {
         visited[v] = true;
-        cout << v << " ";
+
+        if (labels[v] == "REMOVED") return;
+
+        cout << "Inspecting Node " << v << " (" << labels[v] << ")\n";
 
         for (Pair neighbor : adjList[v]) {
-            if (!visited[neighbor.first])
+            if (!visited[neighbor.first] && labels[neighbor.first] != "REMOVED") {
+                cout << "  -> Possible path to Node " << neighbor.first
+                     << " (" << labels[neighbor.first] << ")"
+                     << " [Latency: " << neighbor.second << " ms]\n";
+
                 DFSUtil(neighbor.first, visited);
+            }
         }
     }
 
     void DFS(int start) {
         vector<bool> visited(SIZE, false);
+
+        cout << "\nNetwork Trace (DFS) from Node " << start
+             << " (" << labels[start] << "):\n";
+        cout << "Purpose: Tracing packet routes / failures\n";
+        cout << "=======================================\n";
+
         DFSUtil(start, visited);
-        cout << endl;
     }
 
     // -------- BFS --------
@@ -63,27 +90,34 @@ public:
         visited[start] = true;
         q.push(start);
 
+        cout << "\nLayer-by-Layer Network Scan (BFS) from Node "
+             << start << " (" << labels[start] << "):\n";
+        cout << "Purpose: Finding closest reachable systems\n";
+        cout << "=========================================\n";
+
         while (!q.empty()) {
             int v = q.front();
             q.pop();
-            cout << v << " ";
+
+            if (labels[v] == "REMOVED") continue;
+
+            cout << "Checking Node " << v << " (" << labels[v] << ")\n";
 
             for (Pair neighbor : adjList[v]) {
-                if (!visited[neighbor.first]) {
+                if (!visited[neighbor.first] && labels[neighbor.first] != "REMOVED") {
                     visited[neighbor.first] = true;
                     q.push(neighbor.first);
+
+                    cout << "  -> Next reachable: Node " << neighbor.first
+                         << " (" << labels[neighbor.first] << ")"
+                         << " [Latency: " << neighbor.second << " ms]\n";
                 }
             }
         }
-        cout << endl;
     }
 };
 
 int main() {
-    // Updated edges:
-    // - Removed nodes 1 and 3
-    // - Added nodes 7–12
-    // - Changed weights
     vector<Edge> edges = {
         {0,2,15},{2,6,3},{2,4,7},{2,5,9},
         {6,7,4},{7,8,6},{8,9,2},
@@ -95,10 +129,7 @@ int main() {
 
     graph.printGraph();
 
-    cout << "DFS starting from vertex 0:" << endl;
     graph.DFS(0);
-
-    cout << "BFS starting from vertex 0:" << endl;
     graph.BFS(0);
 
     return 0;
