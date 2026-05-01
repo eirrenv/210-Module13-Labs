@@ -32,7 +32,7 @@ public:
         }
     }
 
-    // -------- Pretty Print --------
+    // -------- Print Graph --------
     void printGraph() {
         cout << "Computer Network Topology:\n";
         cout << "================================\n";
@@ -76,7 +76,6 @@ public:
 
         cout << "\nNetwork Trace (DFS) from Node " << start
              << " (" << labels[start] << "):\n";
-        cout << "Purpose: Tracing packet routes / failures\n";
         cout << "=======================================\n";
 
         DFSUtil(start, visited);
@@ -92,7 +91,6 @@ public:
 
         cout << "\nLayer-by-Layer Network Scan (BFS) from Node "
              << start << " (" << labels[start] << "):\n";
-        cout << "Purpose: Finding closest reachable systems\n";
         cout << "=========================================\n";
 
         while (!q.empty()) {
@@ -116,10 +114,9 @@ public:
         }
     }
 
-    // -------- Dijkstra (Shortest Path) --------
+    // -------- Dijkstra --------
     void shortestPath(int start) {
         vector<int> dist(SIZE, numeric_limits<int>::max());
-
         priority_queue<Pair, vector<Pair>, greater<Pair>> pq;
 
         dist[start] = 0;
@@ -127,7 +124,6 @@ public:
 
         while (!pq.empty()) {
             int current = pq.top().second;
-            int currentDist = pq.top().first;
             pq.pop();
 
             for (Pair neighbor : adjList[current]) {
@@ -152,6 +148,50 @@ public:
                 cout << start << " -> " << i << " : " << dist[i] << endl;
         }
     }
+
+    // -------- Prim's MST --------
+    void minimumSpanningTree() {
+        vector<int> key(SIZE, numeric_limits<int>::max());
+        vector<int> parent(SIZE, -1);
+        vector<bool> inMST(SIZE, false);
+
+        priority_queue<Pair, vector<Pair>, greater<Pair>> pq;
+
+        key[0] = 0;
+        pq.push(make_pair(0, 0));
+
+        while (!pq.empty()) {
+            int u = pq.top().second;
+            pq.pop();
+
+            if (inMST[u] || labels[u] == "REMOVED")
+                continue;
+
+            inMST[u] = true;
+
+            for (Pair neighbor : adjList[u]) {
+                int v = neighbor.first;
+                int weight = neighbor.second;
+
+                if (!inMST[v] && weight < key[v] && labels[v] != "REMOVED") {
+                    key[v] = weight;
+                    pq.push(make_pair(key[v], v));
+                    parent[v] = u;
+                }
+            }
+        }
+
+        cout << "\nMinimum Spanning Tree edges:\n";
+
+        for (int i = 1; i < SIZE; i++) {
+            if (labels[i] == "REMOVED" || parent[i] == -1)
+                continue;
+
+            cout << "Edge from " << parent[i] << " (" << labels[parent[i]] << ") "
+                 << "to " << i << " (" << labels[i] << ") "
+                 << "with latency: " << key[i] << " ms\n";
+        }
+    }
 };
 
 int main() {
@@ -165,11 +205,10 @@ int main() {
     Graph graph(edges);
 
     graph.printGraph();
-
     graph.DFS(0);
     graph.BFS(0);
-
     graph.shortestPath(0);
+    graph.minimumSpanningTree();
 
     return 0;
 }
